@@ -220,6 +220,6 @@ export class CompareEnv {
     // }
 
     private static formatKeysAsEnumerated(arg: string[]): string {
-        return arg.map((key, index) => `${index + 1}. ${key}`).join('\n\n');
+        return arg.map((key, index) => `${index++}. ${key}`).join('\n\n');
     }
 }
