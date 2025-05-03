@@ -1,0 +1,30 @@
+{
+  "name": "node-cli",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "docs": "typedoc --out docs src/"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "a simple cli too to help compare environment variables quickly and highlights missing or differing keys/values.",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "cli-table3": "^0.6.5",
+    "commander": "^13.1.0",
+    "conf": "^13.1.0",
+    "dotenv": "^16.5.0",
+    "js-yaml": "^4.1.0"
+  },
+  "bin": {
+    "compare": "./dist/index.js"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.15.3",
+    "typedoc": "^0.28.3",
+    "typescript": "^5.8.3"
+  }
+}
