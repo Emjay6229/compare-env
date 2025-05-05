@@ -6,7 +6,8 @@ import chalk from 'chalk';
 import { FileNotFoundError } from './exception/FileNotFoundError';
 import { UnsupportedFileTypeError} from './exception/UnsupportedFileTypeError';
 import { ConfigOptions, CompareConfigKeysRecord, StringStringOrUndefinedRecord, StringStringRecord } from './types';
-import Table from 'cli-table3';
+import { FileCompareError } from './exception/FileCompareError';
+// import Table from 'cli-table3';
 /**
  * This is a utility class that compares config (.env or .yaml/.yml) files and outputs the difference.
  * Exposes a single public instance method @compare
@@ -16,7 +17,10 @@ export class CompareEnv {
     private secondConfigFile: string;
     private options: ConfigOptions;
 
-    constructor(firstConfigFile: string, secondConfigFile: string, options: ConfigOptions) {
+    constructor(
+        firstConfigFile: string, 
+        secondConfigFile: string, 
+        options: ConfigOptions) {
         this.firstConfigFile = firstConfigFile;
         this.secondConfigFile = secondConfigFile;
         this.options = options;
@@ -28,6 +32,7 @@ export class CompareEnv {
      */
     compare(): void {
         try {
+            this.checkIfBothFilesAreOfSameType(this.firstConfigFile, this.secondConfigFile);
             // reads, validates file type and parses the raws file into a Plain JavaScript Object
             const firstConfigObject: StringStringOrUndefinedRecord = this.parseFile(this.firstConfigFile);
             const secondConfigObject: StringStringOrUndefinedRecord = this.parseFile(this.secondConfigFile);
@@ -47,14 +52,14 @@ export class CompareEnv {
             } else if (this.options.values) {
                 // compares and prints keys present in both files but having different values.
                 // useful when both files are sure to contain same keys but different values
-                const differences: Record<string, StringStringRecord> = this.getValueDifferences(firstConfigObject, secondConfigObject);
+                const configDifferences: Record<string, StringStringRecord> = this.getValueDifferences(firstConfigObject, secondConfigObject);
 
-                Object.keys(differences).length > 0 
-                    ? this.printValueDifferences(differences) 
+                Object.keys(configDifferences).length > 0 
+                    ? this.printValueDifferences(configDifferences) 
                     : console.log(chalk.green('\n No value differences found between the two files.\n'));
             }
         } catch (e: unknown) {
-            if (e instanceof FileNotFoundError || e instanceof UnsupportedFileTypeError) {
+            if (e instanceof FileNotFoundError || e instanceof UnsupportedFileTypeError || e instanceof FileCompareError) {
                 console.error(`Something went wrong: [${e.getMessage()}]`);  
             } else {
                 console.error(`An unknown error occurred: [${e}]`);
@@ -64,7 +69,7 @@ export class CompareEnv {
     }
 
     private parseFile(filePath: string): StringStringOrUndefinedRecord {
-        const { extname, resolvedPath} = this.validateAndReturnResolvedFilePath(filePath);
+        const { extname, resolvedPath } = this.validateAndReturnResolvedFilePath(filePath);
         let content: string;
     
         if (extname === '.env') {
@@ -221,5 +226,14 @@ export class CompareEnv {
 
     private static formatKeysAsEnumerated(arg: string[]): string {
         return arg.map((key, index) => `${index++}. ${key}`).join('\n\n');
+    }
+
+    private checkIfBothFilesAreOfSameType(fileOne: string, fileTwo: string): void {
+       const fileOneExtName: string = path.extname(fileOne);
+       const fileTwoExtName: string = path.extname(fileTwo);
+
+       if (fileOneExtName !== fileTwoExtName) {
+        throw new FileCompareError();
+       }
     }
 }
